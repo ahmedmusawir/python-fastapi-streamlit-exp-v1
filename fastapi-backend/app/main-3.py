@@ -41,7 +41,7 @@ async def chat(request: Request):
             if hasattr(chunk.choices[0].delta, 'content'):
                 content = chunk.choices[0].delta.content
                 if content:
-                    logger.info(f"Received chunk: {content}")
+                    logger.info(f"Sending chunk: {content}")
                     yield json.dumps({"response": content}) + "\n"
 
     return StreamingResponse(generate(), media_type="application/json")
