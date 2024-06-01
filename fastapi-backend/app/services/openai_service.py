@@ -4,8 +4,7 @@ from openai import OpenAI
 print(os.environ.get('OPENAI_API_KEY'))
 
 client = OpenAI(
-    api_key="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",
-    # api_key=os.environ.get("OPENAI_API_KEY"),
+    api_key=os.environ.get("OPENAI_API_KEY"),
 )
 
 def get_openai_response(prompt: str) -> str:
