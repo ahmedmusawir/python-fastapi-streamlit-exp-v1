@@ -1,43 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>OpenAI WebSocket Chat</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat with GPT</title>
+    <style>
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      }
+      .chat-history {
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+      }
+      .chat-message {
+        margin: 10px 0;
+      }
+      .user-input {
+        text-align: right;
+        color: blue;
+      }
+      .ai-response {
+        text-align: left;
+        color: green;
+      }
+    </style>
   </head>
   <body>
-    <h1>WebSocket Chat</h1>
-    <form action="" onsubmit="sendMessage(event)">
-      <input type="text" id="messageText" autocomplete="off" />
-      <button>Send</button>
-    </form>
-    <ul id="messages"></ul>
+    <div class="container">
+      <h3>Chat with GPT</h3>
+      <div class="chat-history" id="chatHistory"></div>
+      <div>
+        <input type="text" id="userInput" placeholder="Type a message" />
+        <button id="sendButton">Send</button>
+      </div>
+    </div>
+
     <script>
-      var ws = new WebSocket("ws://localhost:8000/ws");
-      var buffer = "";
+      const websocketString = "ws://localhost:8000/ws";
+      const ws = new WebSocket(websocketString);
+      const chatHistory = document.getElementById("chatHistory");
+      const userInput = document.getElementById("userInput");
+      const sendButton = document.getElementById("sendButton");
+      let lastUserMessageDiv = null;
+      let isNewUserInput = true;
 
       ws.onmessage = function (event) {
-        var messages = document.getElementById("messages");
-        var message = document.createElement("li");
-        buffer += event.data;
-
-        // If a chunk ends with a period, we assume it's a complete sentence.
-        if (
-          event.data.endsWith(".") ||
-          event.data.endsWith("?") ||
-          event.data.endsWith("!")
-        ) {
-          var content = document.createTextNode(buffer);
-          message.appendChild(content);
-          messages.appendChild(message);
-          buffer = ""; // Reset the buffer
+        const message = event.data.trim();
+        console.log("Received message:", message);
+        if (lastUserMessageDiv && !isNewUserInput) {
+          const shouldAddSpace = ![".", ",", "!", "?"].includes(
+            message.charAt(0)
+          );
+          lastUserMessageDiv.textContent +=
+            (shouldAddSpace ? " " : "") + message;
+        } else {
+          const messageDiv = document.createElement("div");
+          messageDiv.className = "chat-message ai-response";
+          messageDiv.textContent = message;
+          chatHistory.appendChild(messageDiv);
+          lastUserMessageDiv = messageDiv;
+          isNewUserInput = false;
         }
       };
 
-      function sendMessage(event) {
-        var input = document.getElementById("messageText");
-        ws.send(input.value);
-        input.value = "";
-        event.preventDefault();
-      }
+      sendButton.onclick = function () {
+        const message = userInput.value.trim();
+        if (message) {
+          const userInputDiv = document.createElement("div");
+          userInputDiv.className = "chat-message user-input";
+          userInputDiv.textContent = message;
+          chatHistory.appendChild(userInputDiv);
+          chatHistory.scrollTop = chatHistory.scrollHeight;
+          ws.send(message);
+          userInput.value = "";
+          isNewUserInput = true;
+          lastUserMessageDiv = null;
+        }
+      };
     </script>
   </body>
 </html>

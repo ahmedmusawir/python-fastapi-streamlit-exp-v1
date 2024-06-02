@@ -42,34 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
             )
             logger.info("OpenAI API call successful.")
 
-            async with response as r:
-                while True:
-                    chunk = await r.content.read(1024)
-                    if not chunk:
-                        break
-                    await websocket.send_text(chunk.decode('utf-8'))
-    except Exception as e:
-        logger.error(f"Error: {str(e)}")
-    finally:
-        await websocket.close()
-        logger.info("WebSocket disconnected")
-    await websocket.accept()
-    try:
-        while True:
-            user_input = await websocket.receive_text()
-            logger.info(f"Received user input: {user_input}")
-
-            chat_log = [{'role': 'system', 'content': 'You are a helpful assistant.'}, {'role': 'user', 'content': user_input}]
-
-            response = openai.chat.completions.create(
-                model='gpt-4',
-                messages=chat_log,
-                temperature=0.6,
-                stream=True
-            )
-            logger.info("OpenAI API call successful.")
-
-            async for chunk in response:
+            for chunk in response:
                 if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     logger.info(f"Sending chunk: {content}")
