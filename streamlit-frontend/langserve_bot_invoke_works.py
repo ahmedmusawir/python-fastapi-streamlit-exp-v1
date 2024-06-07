@@ -4,7 +4,7 @@ import httpx
 import json
 
 # Set the FastAPI server URL
-API_URL = "http://localhost:8000/chat"
+API_URL = "http://localhost:8000/chat/invoke"
 
 # Initialize chat log as a session state variable
 if 'messages' not in st.session_state:
@@ -14,16 +14,17 @@ if 'messages' not in st.session_state:
 async def chat_with_gpt(user_input):
     async with httpx.AsyncClient(timeout=None) as client:  # Disable timeout
         try:
-            async with client.stream("POST", API_URL, json={"user_input": user_input}) as response:
+            async with client.stream("POST", API_URL, json={"input": {"input": user_input}}) as response:
                 if response.status_code == 200:
                     full_response = ""
                     with st.chat_message("assistant"):
                         message_placeholder = st.empty()
                         async for chunk in response.aiter_lines():
                             if chunk:
+                                print(f"Chunk received: {chunk}")  # Debugging statement
                                 chunk_json = json.loads(chunk)
-                                content = chunk_json.get("response", "").strip() + ' '  # Add space
-                                full_response += content
+                                output_content = chunk_json.get("output", {}).get("content", "").strip() + ' '  # Extract the content
+                                full_response += output_content
                                 message_placeholder.markdown(full_response + "▌")
                     message_placeholder.markdown(full_response.strip())  # Remove trailing space
                     st.session_state['messages'].append({"role": "assistant", "content": full_response.strip()})

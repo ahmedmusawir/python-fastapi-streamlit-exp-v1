@@ -16,6 +16,7 @@ openai = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # FastAPI app and templates
 app = FastAPI()
+# Home page template
 templates = Jinja2Templates(directory="app/templates")
 
 # Configure logging
@@ -54,4 +55,4 @@ async def chat(request: Request):
                     logger.info(f"Received chunk: {content}")
                     yield json.dumps({"response": content}) + "\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="application/json")
